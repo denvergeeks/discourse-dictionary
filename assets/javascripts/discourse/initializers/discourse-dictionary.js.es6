@@ -1,133 +1,98 @@
-import { withPluginApi } from "discourse/lib/plugin-api";
-import { action } from "@ember/object";
-import showModal from "discourse/lib/show-modal";
-import { createPopper } from "@popperjs/core";
-import { getOwner } from "discourse-common/lib/get-owner";
-import bootbox from "bootbox";
-import I18n from "I18n";
+import { apiInitializer } from "discourse/lib/api";
+import { ajax } from "discourse/lib/ajax";
+import { popupAjaxError } from "discourse/lib/ajax-error";
+import { htmlSafe } from "@ember/template";
 
-let popperElem;
-function buildTooltip() {
-  let html = `
-    <div id="dictionary-tooltip" role="tooltip">
-      <div class="dictionary-tooltip-content"></div>
-      <div id="dict-arrow" data-popper-arrow></div>
-    </div>
-  `;
-
-  let template = document.createElement("template");
-  html = html.trim();
-  template.innerHTML = html;
-  return template.content.firstChild;
-}
-
-function showTooltip() {
-  popperElem?.destroy();
-  const dictElement = event.target;
-  const lexicalCategory = dictElement.dataset.dictLexicalCategory;
-  const meaning = dictElement.dataset.dictMeaning;
-  const meaningDiv = `
-    <div class="meaning-div">
-      <div class="lexical-category">
-        ${lexicalCategory}
-      </div>
-      <div class="meaning">
-        ${meaning}
-      </div>
-    </div>
-  `;
-
-  const tooltip = document.getElementById("dictionary-tooltip");
-  const contentDiv = tooltip.getElementsByClassName(
-    "dictionary-tooltip-content"
-  )[0];
-  contentDiv.innerHTML = meaningDiv.trim();
-
-  popperElem = createPopper(dictElement, tooltip, {
-    modifiers: [
-      {
-        name: "arrow",
-        options: { element: tooltip.querySelector("#dict-arrow") },
-      },
-      {
-        name: "preventOverflow",
-        options: {
-          altAxis: true,
-          padding: 5,
-        },
-      },
-      {
-        name: "offset",
-        options: {
-          offset: [0, 12],
-        },
-      },
-    ],
-  });
-}
-
-function hideTooltip() {
-  popperElem?.destroy();
-}
-
-function initializeDiscourseDictionary(api) {
-  document.documentElement.append(buildTooltip());
-
-  api.decorateCookedElement((post) => {
-    let wordElements = post.getElementsByClassName("dictionary-word");
-    Array.from(wordElements).forEach((element) => {
-      element.addEventListener("mouseenter", showTooltip);
-      element.addEventListener("mouseleave", hideTooltip);
-    });
-  });
-
-  api.onToolbarCreate((toolbar) => {
-    const composerModel = getOwner(this).lookup("controller:composer").model;
+export default apiInitializer("1.0.0", (api) => {
+  const siteSettings = api.container.lookup("service:site-settings");
+  const dialog = api.container.lookup("service:dialog");
+  
+  api.decorateWidget("post-contents:after-cooked", (helper) => {
+    const post = helper.getModel();
     const currentUser = api.getCurrentUser();
-    if (
-      currentUser &&
-      currentUser.can_create_dictionary_meaning &&
-      composerModel &&
-      !composerModel.replyingToTopic &&
-      (composerModel.topicFirstPost ||
-        composerModel.creatingPrivateMessage ||
-        (composerModel.editingPost &&
-          composerModel.post &&
-          composerModel.post.post_number === 1))
-    ) {
-      toolbar.addButton({
-        title: "discourse_dictionary.composer.button.label",
-        id: "insertWordMeaning",
-        group: "extras",
-        icon: "spell-check",
-        sendAction: (event) => {
-          toolbar.context.send("showWordMeaningPopup", event);
-        },
-      });
+    
+    // Only show on first post
+    if (post.get("post_number") !== 1) {
+      return;
     }
-  });
-
-  api.modifyClass("component:d-editor", {
-    @action
-    showWordMeaningPopup(toolbarEvent) {
-      let word = toolbarEvent.selected?.value;
-      if (word) {
-        showModal("select-meaning-popup", {
-          model: {
-            word,
-          },
-        }).set("toolbarEvent", toolbarEvent);
-      } else {
-        bootbox.alert(I18n.t("discourse_dictionary.composer.error"));
+    
+    // Check trust level
+    if (!currentUser) {
+      return;
+    }
+    
+    const minTrustLevel = siteSettings.discourse_dictionary_min_trust_level || 0;
+    if (currentUser.trust_level < minTrustLevel) {
+      return;
+    }
+    
+    return helper.h("button.btn.btn-default.add-dictionary-meaning", {
+      onclick: () => {
+        showDictionaryPrompt(dialog, post, helper);
       }
-    },
+    }, "Add Dictionary Meaning");
+  });
+});
+
+function showDictionaryPrompt(dialog, post, helper) {
+  // Create a custom dialog with an input field
+  dialog.dialog({
+    message: htmlSafe(
+      '<div class="dictionary-prompt">' +
+        '<p>Enter a word to add its dictionary meaning to this topic:</p>' +
+        '<input type="text" id="dictionary-word-input" class="ember-text-field" placeholder="Enter a word" style="width: 100%; padding: 8px;" />' +
+      '</div>'
+    ),
+    title: "Add Dictionary Meaning",
+    buttons: [
+      {
+        label: "Cancel",
+        class: "btn-default"
+      },
+      {
+        label: "Add Meaning",
+        class: "btn-primary",
+        action: () => {
+          const wordInput = document.getElementById("dictionary-word-input");
+          const word = wordInput ? wordInput.value.trim() : "";
+          
+          if (!word) {
+            dialog.alert({
+              message: "Please enter a word",
+              title: "Error"
+            });
+            return;
+          }
+          
+          // Make AJAX request to add dictionary meaning
+          ajax("/discourse-dictionary/add_meaning", {
+            type: "POST",
+            data: {
+              word: word,
+              post_id: post.id
+            }
+          })
+            .then((result) => {
+              if (result.success) {
+                dialog.alert({
+                  message: htmlSafe(result.message || "Dictionary meaning added successfully!"),
+                  title: "Success"
+                });
+                
+                // Refresh the post to show the new content
+                if (helper && helper.widget) {
+                  helper.widget.scheduleRerender();
+                }
+              } else {
+                dialog.alert({
+                  message: htmlSafe(result.message || "Failed to add dictionary meaning"),
+                  title: "Error"
+                });
+              }
+            })
+            .catch(popupAjaxError);
+        }
+      }
+    ]
   });
 }
-
-export default {
-  name: "discourse-dictionary",
-
-  initialize() {
-    withPluginApi("0.8.24", initializeDiscourseDictionary);
-  },
-};
