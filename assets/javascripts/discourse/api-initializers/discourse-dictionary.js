@@ -56,7 +56,8 @@ export default apiInitializer((api) => {
   }
 
   function getMeanings(word) {
-    return ajax("/discourse-dictionary/word", {
+    return ajax("/discourse-dictionary/definition", { 
+      type: "POST",
       data: { word }
     })
       .then((response) => {
