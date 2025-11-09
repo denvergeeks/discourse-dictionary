@@ -130,13 +130,13 @@ export default apiInitializer((api) => {
     });
   }
 
-  // Initialize dictionary word click handlers
-  function initializeDictionaryWords() {
-    document.addEventListener("click", (e) => {
+  // Set up delegation for dictionary word clicks
+  function setupDictionaryClickHandler() {
+    document.addEventListener("click", function(e) {
       if (e.target.classList.contains("dictionary-trigger")) {
         showDefinitionPopup(e.target);
       }
-    });
+    }, true);
   }
 
   function showDefinitionPopup(element) {
@@ -196,11 +196,6 @@ export default apiInitializer((api) => {
     }, 100);
   }
 
-  // Initialize on page load
-  initializeDictionaryWords();
-  
-  // Re-initialize when posts are rendered
-  api.onPostRendered(() => {
-    initializeDictionaryWords();
-  });
+  // Initialize the click handler on page load
+  setupDictionaryClickHandler();
 });
