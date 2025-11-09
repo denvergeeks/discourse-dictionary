@@ -4,10 +4,7 @@ import { popupAjaxError } from "discourse/lib/ajax-error";
 
 export default apiInitializer((api) => {
   const dialog = api.container.lookup("service:dialog");
-  const siteSettings = api.container.lookup("service:site-settings");
-  const currentUser = api.getCurrentUser();
 
-  // Add button to composer toolbar - MODERN PATTERN
   api.onToolbarCreate((toolbar) => {
     toolbar.addButton({
       id: "discourse-dictionary",
@@ -56,12 +53,16 @@ export default apiInitializer((api) => {
   }
 
   function getMeanings(word) {
-    return ajax("/discourse-dictionary/definition", { 
+    // Call the correct endpoint: /discourse-dictionary/definition
+    return ajax("/discourse-dictionary/definition", {
       type: "POST",
       data: { word }
     })
       .then((response) => {
-        return response?.word_definitions?.definitions || [];
+        if (response.word_definitions && response.word_definitions.definitions) {
+          return response.word_definitions.definitions;
+        }
+        return response.definitions || [];
       })
       .catch((error) => {
         popupAjaxError(error);
@@ -72,18 +73,21 @@ export default apiInitializer((api) => {
   function showMeaningsModal(dialog, meanings, word, toolbarEvent) {
     const meaningsHtml = meanings
       .map((meaning, index) => {
+        const definition = meaning.definition || meaning;
+        const lexical_category = meaning.lexical_category || "noun";
+        
         return `
           <div class="meaning-item">
             <label class="meaning-checkbox">
               <input
                 type="radio"
                 name="meaning"
-                value="${meaning.definition}"
-                onchange="window.selectedMeaning = ${index}; window.selectedDefinition = '${meaning.definition.replace(/"/g, '\\\\"')}';"
+                value="${definition}"
+                onchange="window.selectedMeaning = ${index}; window.selectedDefinition = '${definition.replace(/"/g, '\\\\"')}';"
               />
               <span class="meaning-text">
-                <strong>${meaning.lexical_category}</strong><br/>
-                ${meaning.definition}
+                <strong>${lexical_category}</strong><br/>
+                ${definition}
               </span>
             </label>
           </div>
@@ -109,8 +113,8 @@ export default apiInitializer((api) => {
           action: () => {
             if (window.selectedMeaning !== null && window.selectedMeaning !== undefined) {
               const meaning = meanings[window.selectedMeaning];
-              const definition = meaning.definition;
-              const lexical_category = meaning.lexical_category;
+              const definition = meaning.definition || meaning;
+              const lexical_category = meaning.lexical_category || "noun";
 
               toolbarEvent.applySurround(
                 `[dict meaning="${definition}" lexical="${lexical_category}"]`,
