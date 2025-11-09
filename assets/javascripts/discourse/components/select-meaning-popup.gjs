@@ -6,6 +6,7 @@ import { popupAjaxError } from "discourse/lib/ajax-error";
 import { inject as service } from "@ember/service";
 import { on } from "@ember/modifier";
 import { fn } from "@ember/helper";
+import { eq } from "truth-helpers";
 
 export default class SelectMeaningPopupComponent extends Component {
   @service modal;
