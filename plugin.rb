@@ -58,13 +58,10 @@ after_initialize do
     has_trust_level_or_staff?(SiteSetting.discourse_dictionary_min_trust_level)
   end
 
-  DiscourseDictionary::Engine.routes.draw do
-    get "word" => "dictionary#definition"
-    post "word" => "dictionary#definition"
-  end
-
+  # Register routes directly - SIMPLER APPROACH
   Discourse::Application.routes.append do
-    mount ::DiscourseDictionary::Engine, at: "/discourse-dictionary", as: "discourse_dictionary"
+    get "/discourse-dictionary/word" => "discourse_dictionary/dictionary#definition"
+    post "/discourse-dictionary/word" => "discourse_dictionary/dictionary#definition"
   end
 
 end
