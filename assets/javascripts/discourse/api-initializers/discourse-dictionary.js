@@ -115,10 +115,12 @@ export default apiInitializer((api) => {
               const definition = meaning.definition || meaning;
               const lexical_category = meaning.lexical_category || "noun";
 
+              const displayText = definition.split(/[,\.;\s]/)[0] || "word";
+              
               toolbarEvent.applySurround(
                 `[dict meaning="${definition}" lexical="${lexical_category}"]`,
                 "[/dict]",
-                "dictionary_meaning"
+                displayText
               );
             } else {
               dialog.alert({ message: "Please select a definition", title: "Error" });
