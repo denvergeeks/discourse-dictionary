@@ -3,6 +3,7 @@ import { htmlSafe } from "@ember/template";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import { apiInitializer } from "discourse/lib/api";
+import { on } from "@ember/modifier";  // ← ADD THIS LINE
 
 export default apiInitializer("1.0.0", (api) => {
   const dialog = api.container.lookup("service:dialog");
@@ -69,7 +70,7 @@ export default apiInitializer("1.0.0", (api) => {
         <div class="dictionary-meaning-section">
           <button
             class="btn btn-default add-dictionary-meaning"
-            {{on "click" this.openDictionaryPrompt}}
+            {{on "click" this.openDictionaryPrompt}}  {{! This now works - 'on' is imported }}
           >
             Add Dictionary Meaning
           </button>
