@@ -6,11 +6,17 @@ module DiscourseDictionary
     end
 
     def self.create_client
-      # Create client with sandbox credentials
+      # Patch the Request class to use sandbox URL
+      module ::OxfordDictionary
+        class Request
+          remove_const(:BASE_URL) if const_defined?(:BASE_URL)
+          BASE_URL = 'https://od-api-sandbox.oxforddictionaries.com/api/v2'.freeze
+        end
+      end
+
       OxfordDictionary.new(
         app_id: SiteSetting.discourse_dictionary_oxford_app_id,
-        app_key: SiteSetting.discourse_dictionary_oxford_api_key,
-        host: "od-api-sandbox.oxforddictionaries.com"
+        app_key: SiteSetting.discourse_dictionary_oxford_api_key
       )
     end
 
