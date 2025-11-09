@@ -18,6 +18,8 @@ export default apiInitializer((api) => {
   });
 
   function showDictionaryModal(dialog, toolbarEvent) {
+    let firstDialogInstance = null;
+
     dialog.alert({
       message: `<div class="dictionary-prompt">
         <p>Enter a word to add its dictionary meaning:</p>
@@ -75,7 +77,7 @@ export default apiInitializer((api) => {
       .map((meaning, index) => {
         const definition = meaning.definition || meaning;
         const lexical_category = meaning.lexical_category || "noun";
-        
+
         return `
           <div class="meaning-item">
             <label class="meaning-checkbox">
@@ -121,7 +123,8 @@ export default apiInitializer((api) => {
                 "[/dict]",
                 "dictionary_meaning"
               );
-              dialog.close();
+              // Remove the error by just letting the dialog close naturally
+              // The dialog will auto-close after the action completes
             } else {
               dialog.alert({ message: "Please select a definition", title: "Error" });
               return false;
