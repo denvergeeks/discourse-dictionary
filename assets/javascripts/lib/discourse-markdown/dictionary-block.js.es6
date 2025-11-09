@@ -18,11 +18,12 @@ export function setup(helper) {
         startToken.type = "span_open";
         startToken.tag = "span";
         startToken.attrs = [
-          ["class", "dictionary-word"],
-          ["data-dict-meaning", info.attrs.meaning],
-          ["data-dict-lexical-category", info.attrs.lexical],
+          ["class", "dictionary-word dictionary-trigger"],
+          ["data-definition", info.attrs.meaning],
+          ["data-lexical", info.attrs.lexical],
+          ["style", "cursor: pointer; font-weight: bold; text-decoration: underline; text-decoration-style: dotted;"],
         ];
-        startToken.content = content;
+        startToken.content = content || "word";
         startToken.nesting = 1;
 
         endToken.type = "span_close";
