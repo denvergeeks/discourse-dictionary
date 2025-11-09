@@ -1,21 +1,17 @@
 # frozen_string_literal: true
 module DiscourseDictionary
   class OxfordApiClient < ::DiscourseDictionary::DictionaryApiClient
-    BASE_URL = "https://od-api-sandbox.oxforddictionaries.com/api/v2"
-
     def self.client
       @@instance ||= create_client
     end
 
     def self.create_client
-      client = OxfordDictionary.new(
+      # Create client with sandbox credentials
+      OxfordDictionary.new(
         app_id: SiteSetting.discourse_dictionary_oxford_app_id,
-        app_key: SiteSetting.discourse_dictionary_oxford_api_key
+        app_key: SiteSetting.discourse_dictionary_oxford_api_key,
+        host: "od-api-sandbox.oxforddictionaries.com"
       )
-
-      # Override the internal HTTP client to use sandbox URL
-      client.instance_variable_set(:@base_url, BASE_URL)
-      client
     end
 
     def self.reset!
@@ -27,8 +23,6 @@ module DiscourseDictionary
       begin
         Rails.logger.info("=== Oxford API Call Starting ===")
         Rails.logger.info("Word: #{word}")
-        Rails.logger.info("App ID: #{SiteSetting.discourse_dictionary_oxford_app_id}")
-        Rails.logger.info("Base URL: #{BASE_URL}")
         
         response = client().entry(
           word: word,
@@ -37,7 +31,6 @@ module DiscourseDictionary
         )
 
         Rails.logger.info("Response: #{response.inspect}")
-        Rails.logger.info("Response Results: #{response.results.inspect}")
 
         results = response.results || []
         Rails.logger.info("Results count: #{results.count}")
