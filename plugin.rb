@@ -29,6 +29,7 @@ after_initialize do
   %w[
     ../app/lib/api_clients/api_client.rb
     ../app/lib/api_clients/oxford_api_client.rb
+    ../app/lib/post_processor.rb
     ../app/lib/serializables/word_definitions_serializable.rb
     ../app/models/discourse_dictionary/word.rb
     ../app/models/discourse_dictionary/lexical_category.rb
@@ -56,6 +57,11 @@ after_initialize do
 
   add_to_class(:user, :can_create_dictionary_meaning?) do
     has_trust_level_or_staff?(SiteSetting.discourse_dictionary_min_trust_level)
+  end
+
+  # Register post processor for dictionary words
+  on(:post_process_cooked) do |post, new_post|
+    DiscourseDictionary::PostProcessor.process(post) if post.present?
   end
 
   # Register routes directly - SIMPLER APPROACH
