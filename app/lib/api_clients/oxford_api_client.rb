@@ -12,7 +12,7 @@ module DiscourseDictionary
         app_id: SiteSetting.discourse_dictionary_oxford_app_id,
         app_key: SiteSetting.discourse_dictionary_oxford_api_key
       )
-      
+
       # Override the internal HTTP client to use sandbox URL
       client.instance_variable_set(:@base_url, BASE_URL)
       client
@@ -25,13 +25,23 @@ module DiscourseDictionary
 
     def self.fetch_from_api(word)
       begin
+        Rails.logger.info("=== Oxford API Call Starting ===")
+        Rails.logger.info("Word: #{word}")
+        Rails.logger.info("App ID: #{SiteSetting.discourse_dictionary_oxford_app_id}")
+        Rails.logger.info("Base URL: #{BASE_URL}")
+        
         response = client().entry(
           word: word,
           dataset: 'en-us',
           params: { fields: 'definitions' }
         )
 
+        Rails.logger.info("Response: #{response.inspect}")
+        Rails.logger.info("Response Results: #{response.results.inspect}")
+
         results = response.results || []
+        Rails.logger.info("Results count: #{results.count}")
+        
         definition_collection = []
         results.each do |result|
           result.lexicalEntries.each do |lexicalEntry|
@@ -49,9 +59,10 @@ module DiscourseDictionary
           end
         end
 
+        Rails.logger.info("Definitions found: #{definition_collection.count}")
         definition_collection
       rescue => e
-        Rails.logger.error("Oxford API Error: #{e.message}")
+        Rails.logger.error("Oxford API Error: #{e.class} - #{e.message}")
         Rails.logger.error(e.backtrace.join("\n"))
         []
       end
