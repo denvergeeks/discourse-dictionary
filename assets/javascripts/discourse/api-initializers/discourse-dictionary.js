@@ -18,8 +18,6 @@ export default apiInitializer((api) => {
   });
 
   function showDictionaryModal(dialog, toolbarEvent) {
-    let firstDialogInstance = null;
-
     dialog.alert({
       message: `<div class="dictionary-prompt">
         <p>Enter a word to add its dictionary meaning:</p>
@@ -123,8 +121,6 @@ export default apiInitializer((api) => {
                 "[/dict]",
                 "dictionary_meaning"
               );
-              // Remove the error by just letting the dialog close naturally
-              // The dialog will auto-close after the action completes
             } else {
               dialog.alert({ message: "Please select a definition", title: "Error" });
               return false;
@@ -134,4 +130,78 @@ export default apiInitializer((api) => {
       ]
     });
   }
+
+  // Initialize dictionary word interactions after posts are rendered
+  function initializeDictionaryWords() {
+    document.addEventListener("click", (e) => {
+      if (e.target.classList.contains("dictionary-trigger")) {
+        showDefinitionPopup(e.target);
+      }
+    });
+  }
+
+  function showDefinitionPopup(element) {
+    const definition = element.getAttribute("data-definition");
+    const lexical = element.getAttribute("data-lexical");
+    
+    if (!definition) return;
+
+    // Remove existing popup if any
+    const existingPopup = document.querySelector(".dictionary-popup");
+    if (existingPopup) {
+      existingPopup.remove();
+    }
+
+    // Create popup element
+    const popup = document.createElement("div");
+    popup.className = "dictionary-popup";
+    popup.innerHTML = `
+      <div class="dictionary-popup-content">
+        <div class="dictionary-popup-lexical"><strong>${lexical}</strong></div>
+        <div class="dictionary-popup-definition">${definition}</div>
+      </div>
+    `;
+
+    // Style the popup
+    Object.assign(popup.style, {
+      position: "fixed",
+      backgroundColor: "#fff",
+      border: "1px solid #ddd",
+      borderRadius: "4px",
+      padding: "12px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+      zIndex: "9999",
+      maxWidth: "300px",
+      fontSize: "14px",
+      lineHeight: "1.5"
+    });
+
+    // Position popup near the clicked element
+    const rect = element.getBoundingClientRect();
+    popup.style.top = (rect.top - 150) + "px";
+    popup.style.left = rect.left + "px";
+
+    document.body.appendChild(popup);
+
+    // Close popup when clicking elsewhere
+    const closePopup = (e) => {
+      if (!e.target.classList.contains("dictionary-trigger") && 
+          !e.target.closest(".dictionary-popup")) {
+        popup.remove();
+        document.removeEventListener("click", closePopup);
+      }
+    };
+
+    setTimeout(() => {
+      document.addEventListener("click", closePopup);
+    }, 100);
+  }
+
+  // Initialize on page load and after new posts
+  initializeDictionaryWords();
+  
+  // Re-initialize when posts are rendered
+  api.onPostRendered(() => {
+    initializeDictionaryWords();
+  });
 });
