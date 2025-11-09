@@ -57,7 +57,7 @@ after_initialize do
   end
 
   DiscourseDictionary::Engine.routes.draw do
-    get "word" => "dictionary#definition"
+    post "word" => "dictionary#definition"
   end
 
   Discourse::Application.routes.append do
