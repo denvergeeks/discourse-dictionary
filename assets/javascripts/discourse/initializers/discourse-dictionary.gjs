@@ -1,14 +1,13 @@
 import Component from "@glimmer/component";
-import { htmlSafe } from "@ember/template";
+import { withPluginApi } from "discourse/lib/plugin-api";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
-import { on } from "@ember/modifier";
-import { fn } from "@ember/helper";
-import { apiInitializer } from "discourse/lib/api";
+import { htmlSafe } from "@ember/template";
 
-export default apiInitializer("1.0.0", (api) => {
-  const dialog = api.container.lookup("service:dialog");
-  const siteSettings = api.container.lookup("service:site-settings");
+function customizePost(api) {
+  const container = api.container || api._container;
+  const dialog = container.lookup("service:dialog");
+  const siteSettings = container.lookup("service:site-settings");
   const currentUser = api.getCurrentUser();
 
   api.renderAfterWrapperOutlet(
@@ -33,6 +32,17 @@ export default apiInitializer("1.0.0", (api) => {
 
         return true;
       }
+
+      <template>
+        <div class="dictionary-meaning-section">
+          <button
+            class="btn btn-default add-dictionary-meaning"
+            {{on "click" (fn this.openDictionaryPrompt @post)}}
+          >
+            Add Dictionary Meaning
+          </button>
+        </div>
+      </template>
 
       openDictionaryPrompt = (post) => {
         dialog.dialog({
@@ -93,17 +103,16 @@ export default apiInitializer("1.0.0", (api) => {
           })
           .catch(popupAjaxError);
       };
-
-      <template>
-        <div class="dictionary-meaning-section">
-          <button
-            class="btn btn-default add-dictionary-meaning"
-            {{on "click" (fn this.openDictionaryPrompt @post)}}
-          >
-            Add Dictionary Meaning
-          </button>
-        </div>
-      </template>
     }
   );
-});
+}
+
+export default {
+  name: "discourse-dictionary",
+
+  initialize(container) {
+    withPluginApi("1.0.0", (api) => {
+      customizePost(api);
+    });
+  }
+};
