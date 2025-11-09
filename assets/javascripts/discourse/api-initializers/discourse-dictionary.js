@@ -69,68 +69,67 @@ export default apiInitializer((api) => {
       });
   }
 
-  function showMeaningsModal(dialog, meanings, word, toolbarEvent) {
-    const meaningsHtml = meanings
-      .map((meaning, index) => {
-        const definition = meaning.definition || meaning;
-        const lexical_category = meaning.lexical_category || "noun";
+function showMeaningsModal(dialog, meanings, word, toolbarEvent) {
+  const meaningsHtml = meanings
+    .map((meaning, index) => {
+      const definition = meaning.definition || meaning;
+      const lexical_category = meaning.lexical_category || "noun";
 
-        return `
-          <div class="meaning-item">
-            <label class="meaning-checkbox">
-              <input
-                type="radio"
-                name="meaning"
-                value="${definition}"
-                onchange="window.selectedMeaning = ${index}; window.selectedDefinition = '${definition.replace(/"/g, '\\\\"')}';"
-              />
-              <span class="meaning-text">
-                <strong>${lexical_category}</strong><br/>
-                ${definition}
-              </span>
-            </label>
-          </div>
-        `;
-      })
-      .join("");
-
-    dialog.alert({
-      message: `
-        <div class="select-meaning-popup">
-          <h3>${word}</h3>
-          <div class="meanings-list">
-            ${meaningsHtml}
-          </div>
+      return `
+        <div class="meaning-item">
+          <label class="meaning-checkbox">
+            <input
+              type="radio"
+              name="meaning"
+              value="${definition}"
+              onchange="window.selectedMeaning = ${index}; window.selectedDefinition = '${definition.replace(/"/g, '\\\\"')}'; window.selectedWord = '${word}';"
+            />
+            <span class="meaning-text">
+              <strong>${lexical_category}</strong><br/>
+              ${definition}
+            </span>
+          </label>
         </div>
-      `,
-      title: "Select Definition",
-      buttons: [
-        { label: "Cancel", class: "btn-default" },
-        {
-          label: "Insert Meaning",
-          class: "btn-primary",
-          action: () => {
-            if (window.selectedMeaning !== null && window.selectedMeaning !== undefined) {
-              const meaning = meanings[window.selectedMeaning];
-              const definition = meaning.definition || meaning;
-              const lexical_category = meaning.lexical_category || "noun";
+      `;
+    })
+    .join("");
 
-              const displayText = definition.split(/[,\.;\s]/)[0] || "word";
-              
-              toolbarEvent.applySurround(
-                `[dict meaning="${definition}" lexical="${lexical_category}"]`,
-                "[/dict]",
-                displayText
-              );
-            } else {
-              dialog.alert({ message: "Please select a definition", title: "Error" });
-              return false;
-            }
+  dialog.alert({
+    message: `
+      <div class="select-meaning-popup">
+        <h3>${word}</h3>
+        <div class="meanings-list">
+          ${meaningsHtml}
+        </div>
+      </div>
+    `,
+    title: "Select Definition",
+    buttons: [
+      { label: "Cancel", class: "btn-default" },
+      {
+        label: "Insert Meaning",
+        class: "btn-primary",
+        action: () => {
+          if (window.selectedMeaning !== null && window.selectedMeaning !== undefined) {
+            const meaning = meanings[window.selectedMeaning];
+            const definition = meaning.definition || meaning;
+            const lexical_category = meaning.lexical_category || "noun";
+            const displayWord = window.selectedWord || "word";
+
+            toolbarEvent.applySurround(
+              `[dict meaning="${definition}" lexical="${lexical_category}"]${displayWord}[/dict]`,
+              "",
+              ""
+            );
+          } else {
+            dialog.alert({ message: "Please select a definition", title: "Error" });
+            return false;
           }
         }
-      ]
-    });
-  }
+      }
+    ]
+  });
+}
 
   // Set up delegation for dictionary word clicks
   function setupDictionaryClickHandler() {
