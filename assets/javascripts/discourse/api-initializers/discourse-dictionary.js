@@ -53,7 +53,6 @@ export default apiInitializer((api) => {
   }
 
   function getMeanings(word) {
-    // Call the correct endpoint: /discourse-dictionary/word
     return ajax("/discourse-dictionary/word", {
       type: "GET",
       data: { word }
@@ -131,7 +130,7 @@ export default apiInitializer((api) => {
     });
   }
 
-  // Initialize dictionary word interactions after posts are rendered
+  // Initialize dictionary word click handlers
   function initializeDictionaryWords() {
     document.addEventListener("click", (e) => {
       if (e.target.classList.contains("dictionary-trigger")) {
@@ -197,7 +196,7 @@ export default apiInitializer((api) => {
     }, 100);
   }
 
-  // Initialize on page load and after new posts
+  // Initialize on page load
   initializeDictionaryWords();
   
   // Re-initialize when posts are rendered
