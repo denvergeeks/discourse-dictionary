@@ -1,8 +1,4 @@
 export function setup(helper) {
-  if (!helper.markdownIt) {
-    return;
-  }
-
   helper.allowList("span.dictionary-word");
   helper.allowList("span.dictionary-trigger");
 
