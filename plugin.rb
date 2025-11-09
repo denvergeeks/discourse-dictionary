@@ -58,12 +58,6 @@ after_initialize do
     has_trust_level_or_staff?(SiteSetting.discourse_dictionary_min_trust_level)
   end
 
-  # Register markdown it feature
-  DiscoursePluginRegistry.markdown_it_feature(
-    "discourse-dictionary-enabled",
-    :discourse_dictionary_enabled
-  )
-
   # Register routes directly
   Discourse::Application.routes.append do
     get "/discourse-dictionary/word" => "discourse_dictionary/dictionary#definition"
