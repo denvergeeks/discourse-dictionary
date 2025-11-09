@@ -16,19 +16,15 @@ export function setup(helper) {
     md.inline.bbcode.ruler.push("dict", {
       tag: "dict",
       wrap(startToken, endToken, info, content) {
-        // Extract the first word from the definition for display
-        const definition = info.attrs.meaning || "";
-        const firstWord = definition.split(/[\s,\.;:!?\-()]/)[0] || "word";
-
         startToken.type = "span_open";
         startToken.tag = "span";
         startToken.attrs = [
           ["class", "dictionary-word dictionary-trigger"],
-          ["data-definition", definition],
+          ["data-definition", info.attrs.meaning],
           ["data-lexical", info.attrs.lexical],
           ["style", "cursor: pointer; font-weight: bold; text-decoration: underline; text-decoration-style: dotted; color: #0087be;"],
         ];
-        startToken.content = firstWord;
+        startToken.content = content;  // Use the content as-is (the word)
         startToken.nesting = 1;
 
         endToken.type = "span_close";
