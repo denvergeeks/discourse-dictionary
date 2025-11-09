@@ -1,21 +1,22 @@
-import Component from "@glimmer/component";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import { htmlSafe } from "@ember/template";
+import Component from "@ember/component";
 
 function customizePost(api) {
-  const container = api.container || api._container;
-  const dialog = container.lookup("service:dialog");
-  const siteSettings = container.lookup("service:site-settings");
+  const dialog = api.container.lookup("service:dialog");
+  const siteSettings = api.container.lookup("service:site-settings");
   const currentUser = api.getCurrentUser();
 
   api.renderAfterWrapperOutlet(
     "post-content-cooked-html",
-    class extends Component {
-      static shouldRender(args) {
+    class DictionaryMeaningComponent extends Component {
+      get shouldRender() {
+        const post = this.post;
+        
         // Only show on first post
-        if (args.post?.post_number !== 1) {
+        if (post?.post_number !== 1) {
           return false;
         }
 
@@ -33,18 +34,9 @@ function customizePost(api) {
         return true;
       }
 
-      <template>
-        <div class="dictionary-meaning-section">
-          <button
-            class="btn btn-default add-dictionary-meaning"
-            {{on "click" (fn this.openDictionaryPrompt @post)}}
-          >
-            Add Dictionary Meaning
-          </button>
-        </div>
-      </template>
+      openDictionaryPrompt = () => {
+        const post = this.post;
 
-      openDictionaryPrompt = (post) => {
         dialog.dialog({
           message: htmlSafe(
             '<div class="dictionary-prompt">' +
@@ -103,6 +95,20 @@ function customizePost(api) {
           })
           .catch(popupAjaxError);
       };
+
+      // Define the template using the layout property
+      layout = (hbs`
+        {{#if this.shouldRender}}
+          <div class="dictionary-meaning-section">
+            <button
+              class="btn btn-default add-dictionary-meaning"
+              {{action this.openDictionaryPrompt}}
+            >
+              Add Dictionary Meaning
+            </button>
+          </div>
+        {{/if}}
+      `);
     }
   );
 }
