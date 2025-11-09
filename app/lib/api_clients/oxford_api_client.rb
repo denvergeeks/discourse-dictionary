@@ -6,6 +6,11 @@ module DiscourseDictionary
         app_id: SiteSetting.discourse_dictionary_oxford_app_id,
         app_key: SiteSetting.discourse_dictionary_oxford_api_key
       )
+      
+      # Set the sandbox API base URL
+      @@instance.base_url = "https://od-api-sandbox.oxforddictionaries.com/api/v2"
+      
+      @@instance
     end
 
     def self.reset!
