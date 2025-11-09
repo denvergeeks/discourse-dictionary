@@ -5,8 +5,8 @@
 # version: 0.1
 # authors: fzngagan
 # url: https://github.com/fzngagan
-gem 'plissken', '0.1.0', require: false
-gem 'oxford_dictionary', '2.0.1', require: true
+gem 'plissken', '4.0.0', require: false
+gem 'oxford_dictionary', '3.0.0', require: true
 
 register_asset "stylesheets/common/discourse-dictionary.scss"
 register_asset "stylesheets/desktop/discourse-dictionary.scss", :desktop
