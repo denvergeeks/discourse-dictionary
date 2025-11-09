@@ -11,7 +11,6 @@ gem 'oxford_dictionary', '2.0.1', require: true
 register_asset "stylesheets/common/discourse-dictionary.scss"
 register_asset "stylesheets/desktop/discourse-dictionary.scss", :desktop
 register_asset "stylesheets/mobile/discourse-dictionary.scss", :mobile
-register_asset "javascripts/lib/discourse-markdown/dictionary-block.js.es6"
 register_svg_icon "spell-check"
 
 enabled_site_setting :discourse_dictionary_enabled
