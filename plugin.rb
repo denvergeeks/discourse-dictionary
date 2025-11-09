@@ -63,6 +63,8 @@ after_initialize do
 
   Discourse::Application.routes.append do
     mount ::DiscourseDictionary::Engine, at: "/discourse-dictionary"
+    get "/discourse-dictionary/word" => "discourse_dictionary/dictionary#definition"
+    post "/discourse-dictionary/word" => "discourse_dictionary/dictionary#definition"
   end
 
 end
