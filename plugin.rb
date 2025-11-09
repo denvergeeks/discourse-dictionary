@@ -25,6 +25,7 @@ after_initialize do
     end
   end
 
+  # Load all plugin files
   %w[
     ../app/lib/api_clients/api_client.rb
     ../app/lib/api_clients/oxford_api_client.rb
@@ -40,6 +41,7 @@ after_initialize do
     load File.expand_path(path, __FILE__)
   end
 
+  # Add user permissions
   on(:site_setting_changed) do |name, old_value, new_value|
     DiscourseDictionary::OxfordApiClient.reset! if (
       %i[
@@ -56,15 +58,15 @@ after_initialize do
     has_trust_level_or_staff?(SiteSetting.discourse_dictionary_min_trust_level)
   end
 
+  # Mount the engine with routes
+  Discourse::Application.routes.append do
+    mount ::DiscourseDictionary::Engine, at: "/discourse-dictionary", as: "discourse_dictionary"
+  end
+
+  # Draw routes inside the engine namespace
   DiscourseDictionary::Engine.routes.draw do
     get "word" => "dictionary#definition"
     post "word" => "dictionary#definition"
-  end
-
-  Discourse::Application.routes.append do
-    mount ::DiscourseDictionary::Engine, at: "/discourse-dictionary"
-    get "/discourse-dictionary/word" => "discourse_dictionary/dictionary#definition"
-    post "/discourse-dictionary/word" => "discourse_dictionary/dictionary#definition"
   end
 
 end
